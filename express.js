@@ -1,66 +1,37 @@
 const express = require('express');
+const path = require('path');
 
+const friendsRouter = require('./routes/friends.router');
+const messageRouter = require('./routes/message.router');
 
 const app = express();
 
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 const PORT = 3000;
 
 
-const friendsList = [{
-    id: 0,
-    name: 'He-Man'
-},{
-    id: 1,
-    name: 'ThunderCats'
-},{
-    id: 2,
-    name: 'SwatKatz'
-}]
-
 app.use((req, res, next)=>{
-    console.log(`${req.method} ${req.url}`);
+    console.log(`${req.method} ${req.baseUrl} ${req.url}`);
     next();
 })
-
+/**
+ * .use is used for middleware taking 3 params request, response, next
+ */
 app.use(express.json());
 
-app.post('/friends', (req,res)=>{
-
-    if(!req.body.name){
-       return res.status(400).json(
-            {
-                error: 'Missing friend name'
-            }
-        );
-    };
-
-    const newFriend = {
-        name: req.body.name,
-        id: friendsList.length
-    };
-
-    friendsList.push(newFriend);
-    res.json(newFriend);
-})
+app.use('/site', express.static(path.join(__dirname,'public')))
+app.use('/friends', friendsRouter);
+app.use('/messages', messageRouter);
 
 app.get('/', (req, res)=>{
-    res.send('hello');
+    res.render('index', {
+        title: 'My Swat Cat',
+        caption: "My Swat cats"
+    });
 });
 
-app.get('/friends', (req, res)=>{
-    res.json(friendsList)
-});
-
-app.get('/friends/:friendId', (req, res) => {
-    const friendId = Number(req.params.friendId);
-    const friend = friendsList[friendId];
-    if(friend){
-        res.status(200).json(friend);
-    }else{
-        res.status(404).json({
-            error: "Friends does not exist"
-        })
-    }
-});
-
+/**
+ * making the application available on port
+ */
 app.listen(PORT)
